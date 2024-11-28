@@ -12,12 +12,14 @@ import {
 } from '@nestjs/common';
 import { SongService } from './song.service';
 import { CreateSongDto } from './dto/create-song-dto';
+import { Song } from './song.entity';
+import { UpdateSongDto } from './dto/update-song-dto';
 
 @Controller('songs')
 export class SongController {
   constructor(private readonly songService: SongService) {}
   @Get()
-  findAll() {
+  async findAll(): Promise<Song[]> {
     try {
       return this.songService.findAll();
     } catch (err) {
@@ -35,23 +37,26 @@ export class SongController {
       'id',
       new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
     )
-    id: string,
+    id: number,
   ) {
-    return `Song with id ${id} found`;
+    return this.songService.findOne(id);
   }
 
   @Post()
-  create(@Body() song: CreateSongDto) {
+  async create(@Body() song: CreateSongDto): Promise<Song> {
     return this.songService.create(song);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string) {
-    return `Song with id ${id} updated`;
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateSong: UpdateSongDto,
+  ) {
+    return this.songService.update(id, updateSong);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return `Song with id ${id} deleted`;
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.songService.remove(id);
   }
 }
