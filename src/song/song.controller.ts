@@ -1,22 +1,48 @@
-import { Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpException,
+  HttpStatus,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+} from '@nestjs/common';
 import { SongService } from './song.service';
+import { CreateSongDto } from './dto/create-song-dto';
 
 @Controller('songs')
 export class SongController {
   constructor(private readonly songService: SongService) {}
   @Get()
   findAll() {
-    return this.songService.findAll();
+    try {
+      return this.songService.findAll();
+    } catch (err) {
+      throw new HttpException(
+        'server error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        { cause: err },
+      );
+    }
   }
 
   @Get(':id')
-  findOne(id: string) {
+  findOne(
+    @Param(
+      'id',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: string,
+  ) {
     return `Song with id ${id} found`;
   }
 
   @Post()
-  create() {
-    return this.songService.create('Wonderful Life By Zendaya');
+  create(@Body() song: CreateSongDto) {
+    return this.songService.create(song);
   }
 
   @Patch(':id')
